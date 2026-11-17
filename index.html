@@ -590,10 +590,11 @@ class Component extends DCLogic {
     window.addEventListener('touchmove', e => { if (ty !== null && Math.abs(ty - e.touches[0].clientY) > 24) open(); }, { passive: true });
     const vids = () => Array.from(document.querySelectorAll('video[data-auto]'));
     const tryPlay = v => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+    vids().forEach(v => { v.muted = true; v.defaultMuted = true; v.setAttribute('playsinline', ''); });
     let started = false;
     const playAll = () => { const first = vids()[0]; if (first && !started) { if (!first.paused) started = true; else tryPlay(first); } };
     document.addEventListener('play', e => { if (e.target.tagName === 'VIDEO') { started = true; vids().forEach(v => { if (v !== e.target) v.pause(); }); } }, true);
-    if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => es.forEach(en => { const v = en.target; if (en.isIntersecting && v.paused) tryPlay(v); else if (!en.isIntersecting && !v.paused) v.pause(); }), { threshold: 0.5 }); setTimeout(() => vids().forEach(v => io.observe(v)), 300); }
+    if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => es.forEach(en => { const v = en.target; if (en.isIntersecting && v.paused) tryPlay(v); else if (!en.isIntersecting && !v.paused) v.pause(); }), { threshold: 0.35 }); vids().forEach(v => io.observe(v)); }
     document.addEventListener('click', e => { if (e.target.tagName === 'VIDEO' && e.target.dataset.auto) { e.target.paused ? tryPlay(e.target) : e.target.pause(); return; } const b = e.target.closest && e.target.closest('[data-sound]'); if (!b) return; const v = b.parentElement.querySelector('video'); if (!v) return; v.muted = !v.muted; if (!v.muted) { v.volume = 1; v.play().catch(() => {}); } b.textContent = v.muted ? '🔇' : '🔊'; });
     playAll(); setTimeout(playAll, 500); setTimeout(playAll, 1500);
     ['click', 'touchstart', 'scroll'].forEach(ev => window.addEventListener(ev, playAll, { once: true, passive: true }));
